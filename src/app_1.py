@@ -85,10 +85,13 @@ RACE_COLORS = {
     'White':                             '#A0AEC0',
 }
 
-# ── Load data FIRST before any widget that depends on it ──────────────────────
 @st.cache_data
 def load_data():
-    return pd.read_csv('../Data/clean_eeo_data.csv')
+    base = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base, '..', 'Data', 'clean_eeo_data.csv')
+    df = pd.read_csv(path)
+    df = df[~df['state'].str.contains('Metro Area|Micro Area|Division|Region', na=False)]
+    return df
 
 df = load_data()
 
@@ -96,7 +99,6 @@ df = load_data()
 ALL_OCCS  = sorted(df['occupation'].unique().tolist())
 ALL_RACES = sorted(df['race'].unique().tolist())
 
-# ── Build AI context ──────────────────────────────────────────────────────────
 US_STATES = {
     'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
     'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
@@ -157,7 +159,6 @@ def get_client():
 
 client = get_client()
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.image("https://img.icons8.com/fluency/96/diversity.png", width=60)
 st.sidebar.title("🎛️ Control Panel")
 st.sidebar.markdown("---")
@@ -196,7 +197,6 @@ top_n = st.sidebar.slider(
 st.sidebar.markdown("---")
 st.sidebar.info("💡 Use the filters above to refine all charts and exports.")
 
-# ── Apply filters ─────────────────────────────────────────────────────────────
 # Fall back to all if user clears a filter accidentally
 occs_to_use  = selected_occs  if selected_occs  else ALL_OCCS
 races_to_use = selected_races if selected_races else ALL_RACES
@@ -207,7 +207,6 @@ df_f = df[
     (df['percent'] >= min_pct)
 ].copy()
 
-# ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("# 🔬 Diverse STEM Talent Finder")
 st.markdown(
     "**Team 4 — Diversity & Inclusion Officers** | "
@@ -236,16 +235,13 @@ if df_f.empty:
     st.warning("⚠️ No data matches your filters. Try lowering the minimum % or selecting more groups.")
     st.stop()
 
-# ── Tabs (3 only) ─────────────────────────────────────────────────────────────
 tab1, tab2, tab3 = st.tabs([
     "📊  Dashboard",
     "🤖  AI Location Advisor",
     "📥  Export Report",
 ])
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 1 — DASHBOARD
-# ═══════════════════════════════════════════════════════════════════════════════
+#
 with tab1:
     st.markdown('<div class="section-header">📊 Geographic Distribution of Diverse STEM Talent</div>', unsafe_allow_html=True)
 
@@ -389,9 +385,9 @@ with tab1:
             mime='text/csv'
         )
 
-# ═══════════════════════════════════════════════════════════════════════════════
+
 # TAB 2 — AI LOCATION ADVISOR
-# ═══════════════════════════════════════════════════════════════════════════════
+
 with tab2:
     st.markdown('<div class="section-header">🤖 AI Natural Language Location Advisor</div>', unsafe_allow_html=True)
 
@@ -478,9 +474,8 @@ with tab2:
                 st.session_state.messages = []
                 st.rerun()
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — EXPORT REPORT
-# ═══════════════════════════════════════════════════════════════════════════════
+#
 with tab3:
     st.markdown('<div class="section-header">📥 Export Report</div>', unsafe_allow_html=True)
 
